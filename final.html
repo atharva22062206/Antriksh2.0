@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Announcement System</title>
+    <style>
+      /* Style for the h1 */
+      h1 {
+           text-align: center;
+           margin-top: 3px;
+           color: #ffffff;
+           text-shadow: 2px 2px 4px #000000;
+         }
+         img {
+           max-width: 25%;
+           max-height: 0%;
+         }
+   
+         /* Style for the form */
+         form {
+           max-width: 500px;
+           margin: 0 auto;
+           background-color: #ffffff;
+           padding: 20px;
+           border-radius: 5px;
+           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+         }
+   
+         /* Style for the form inputs */
+         label {
+           display: inline-block;
+           margin-bottom: 5px;
+           font-weight: bold;
+         }
+   
+         input[type="text"],
+         input[type="date"],
+         input[type="time"] {
+           width: 100%;
+           padding: 10px;
+           margin-bottom: 15px;
+           border: none;
+           border-radius: 3px;
+           background-color: #f2f2f2;
+         }
+   
+         input[type="button"] {
+           display: block;
+           width: 100%;
+           padding: 10px;
+           margin-top: 15px;
+           border: none;
+           border-radius: 3px;
+           background-color: #fe9503;
+           color: #ffffff;
+           font-weight: bold;
+           cursor: pointer;
+           transition: background-color 0.3s ease-in-out;
+         }
+   
+         input[type="button"]:hover {
+           background-color: #35a14d;
+         }
+   
+         /* Style for the table */
+         table {
+           max-width: 800px;
+           margin: 0 auto;
+           background-color: #ffffff;
+           padding: 20px;
+           border-radius: 5px;
+           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+           border-collapse: collapse;
+         }
+   
+         th,
+         td {
+           padding: 10px;
+           text-align: left;
+           border-bottom: 1px solid #ddd;
+         }
+   
+         th {
+           background-color: #fe9503;
+           color: #ffffff;
+         }
+   
+         /* Colorful styles */
+         body {
+           background-color: #ceb878;
+         }
+   
+         form {
+           border: 2px solid #fe9503;
+           box-shadow: 0 2px 5px rgba(255, 51, 51, 0.1);
+         }
+   
+         input[type="button"] {
+           background-color: #fe9503;
+         }
+   
+         input[type="button"]:hover {
+           background-color: #4a2802;
+         }
+   
+         table {
+           border: 2px solid #fe9503;
+           box-shadow: 0 2px 5px rgba(255, 51, 51, 0.1);
+         }
+   
+         th {
+           background-color: #fe9503;
+         }
+   
+         td {
+           border-bottom: 1px solid #fe9503;
+         }
+   
+         /* Responsive styles */
+         @media screen and (max-width: 500px) {
+           form {
+             max-width: 100%;
+           }
+   
+           input[type="button"],
+           table {
+             max-width: 100%;
+           }
+         }
+   
+      </style>
+    <script>
+      let editingRow = null;
+
+function addAnnouncement() {
+  const announcement = "Next lecture: " + document.getElementById("announcement").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+
+  if (announcement === "" || date === "" || time === "") {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  const datetime = `${date} ${time}:00`;
+  const datetimeObj = new Date(datetime);
+  const now = new Date();
+
+  if (datetimeObj < now) {
+    alert("Please select a future date and time.");
+    return;
+  }
+
+  const table = document.getElementById("announcementTable").getElementsByTagName('tbody')[0];
+  const row = table.insertRow();
+
+  const cell1 = row.insertCell();
+  cell1.innerHTML = announcement;
+
+  const cell2 = row.insertCell();
+  cell2.innerHTML = formatDate(datetimeObj);
+
+  const cell3 = row.insertCell();
+  cell3.innerHTML = formatTime(datetimeObj);
+
+  const cell4 = row.insertCell();
+  const editButton = document.createElement("button");
+  editButton.innerHTML = "Edit";
+  editButton.onclick = function() {
+    editAnnouncement(row);
+  }
+  cell4.appendChild(editButton);
+
+  const cell5 = row.insertCell();
+  const deleteButton = document.createElement("button");
+  deleteButton.innerHTML = "Delete";
+  deleteButton.onclick = function() {
+    deleteAnnouncement(row);
+  }
+  cell5.appendChild(deleteButton);
+
+  const diff = datetimeObj.getTime() - now.getTime();
+  const timeoutId = setTimeout(function() {
+    speakAnnouncement(announcement);
+    deleteAnnouncement(row);
+  }, diff);
+  row.timeoutId = timeoutId;
+}
+
+function editAnnouncement(row) {
+  if (editingRow !== null) {
+    alert("Please save or cancel the currently edited announcement first.");
+    return;
+  }
+  
+  editingRow = row;
+  const cells = row.getElementsByTagName("td");
+  const announcement = cells[0].innerHTML;
+  const date = cells[1].innerHTML;
+  const time = cells[2].innerHTML;
+  const form = document.getElementById("announcementForm");
+  form.elements.namedItem("announcement").value = announcement;
+  form.elements.namedItem("date").value = date;
+  form.elements.namedItem("time").value = time;
+  const addButton = document.getElementById("addButton");
+  addButton.innerHTML = "Save";
+  addButton.onclick = function() {
+    saveAnnouncement(row);
+  }
+}
+
+function saveAnnouncement(row) {
+  const announcement = document.getElementById("announcement").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+
+  if (announcement === "" || date === "" || time === "") {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  const datetime = `${date} ${time}:00`;
+  const datetimeObj = new Date(datetime);
+  const now = new Date();
+
+  if (datetimeObj < now) {
+    alert("Please select a future date and time.");
+    return;
+  }
+
+  const cells = row.getElementsByTagName("td");
+  cells[0].innerHTML = announcement;
+  cells[1].innerHTML = formatDate(datetimeObj);
+  cells[2].innerHTML = formatTime(datetimeObj);
+  editingRow = null;
+  const addButton = document.getElementById("addButton");
+  addButton.innerHTML = "Set Announcement";
+  addButton.onclick = addAnnouncement;
+}
+
+function cancelEdit() {
+  const form = document.getElementById("announcementForm");
+  form.elements.namedItem("announcement").value = "";
+  form.elements.namedItem("date").value = "";
+  form.elements.namedItem("time").value = "";
+editingRow = null;
+const addButton = document.getElementById("addButton");
+addButton.innerHTML = "Set Announcement";
+addButton.onclick = addAnnouncement;
+}
+
+function deleteAnnouncement(row) {
+clearTimeout(row.timeoutId);
+row.remove();
+}
+
+function speakAnnouncement(announcement) {
+const utterance = new SpeechSynthesisUtterance(announcement);
+speechSynthesis.speak(utterance);
+}
+
+function formatDate(datetime) {
+const options = { year: "numeric", month: "long", day: "numeric" };
+return datetime.toLocaleDateString("en-US", options);
+}
+
+function formatTime(datetime) {
+const options = { hour: "numeric", minute: "numeric", hour12: true };
+return datetime.toLocaleTimeString("en-US", options);
+}
+
+    </script>
+    <script>
+      function createCalendar(date) {
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = "";
+
+  const table = document.createElement("table");
+  table.classList.add("calendar");
+  calendar.appendChild(table);
+
+  const headerRow = table.insertRow();
+  const prevButtonCell = headerRow.insertCell();
+  const titleCell = headerRow.insertCell();
+  const nextButtonCell = headerRow.insertCell();
+  prevButtonCell.innerHTML = "<";
+  titleCell.innerHTML = formatDate(date, "MMMM yyyy");
+  nextButtonCell.innerHTML = ">";
+  prevButtonCell.onclick = function() {
+    createCalendar(addMonths(date, -1));
+  }
+  nextButtonCell.onclick = function() {
+    createCalendar(addMonths(date, 1));
+  }
+
+  const daysRow = table.insertRow();
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  for (const day of days) {
+    const cell = daysRow.insertCell();
+    cell.innerHTML = day;
+  }
+
+  const monthStart = startOfMonth(date);
+  const monthEnd = endOfMonth(date);
+  const startDay = getDay(monthStart);
+  const endDay = getDay(monthEnd);
+  const daysInMonth = getDaysInMonth(date);
+  const numRows = Math.ceil((startDay + daysInMonth) / 7);
+  let dayNum = 1;
+  for (let i = 0; i < numRows; i++) {
+    const row = table.insertRow();
+    for (let j = 0; j < 7; j++) {
+      const cell = row.insertCell();
+      if ((i === 0 && j < startDay) || (i === numRows - 1 && j > endDay)) {
+        cell.classList.add("empty");
+      } else {
+        const dayCell = document.createElement("div");
+        dayCell.classList.add("day");
+        dayCell.innerHTML = dayNum;
+        dayCell.onclick = function() {
+          showAnnouncements(new Date(date.getFullYear(), date.getMonth(), dayNum));
+        }
+        cell.appendChild(dayCell);
+        dayNum++;
+      }
+    }
+  }
+}
+
+    </script>
+    
+  </head>
+  
+  <body>
+
+    <h1><img src="C:\download.svg"alt="Logo"></h1>
+    <form>
+      <label for="announcement">Announcement:</label>
+      <input type="text" id="announcement" name="announcement"><br><br>
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date"><br><br>
+      <label for="time">Time:</label>
+      <input type="time" id="time" name="time"><br><br>
+      <input type="button" value="Set Announcement" onclick="addAnnouncement()">
+      
+    </form>
+    <br>
+    <table id="announcementTable">
+      <thead>
+        <tr>
+          <th>Announcement</th>
+          <th>Date and Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    <div class="announcement">
+      
+      <button class="announcement__close">&times;</button>
+      <div id="calendar"></div>
+
+    </div>
+    
+
+  </body>
+</html>
